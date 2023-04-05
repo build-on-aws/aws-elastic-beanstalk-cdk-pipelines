@@ -1,11 +1,20 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
+// Add import statements here
 import * as s3assets from 'aws-cdk-lib/aws-s3-assets';
 import * as elasticbeanstalk from 'aws-cdk-lib/aws-elasticbeanstalk';
 import * as iam from 'aws-cdk-lib/aws-iam';
 
+export interface EBEnvProps extends cdk.StackProps {
+    // Autoscaling group configuration
+  minSize?: string;
+  maxSize?: string;
+  instanceTypes?: string;
+  envName?: string;
+}
+
 export class EBApplnStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props?: EBEnvProps) {
     super(scope, id, props);
 
     // The code that defines your stack goes here
@@ -60,26 +69,26 @@ const optionSettingProperties: elasticbeanstalk.CfnEnvironment.OptionSettingProp
     {
         namespace: 'aws:autoscaling:asg',
         optionName: 'MinSize',
-        value: '1',
+        value: props?.maxSize ?? '1',
     },
     {
         namespace: 'aws:autoscaling:asg',
         optionName: 'MaxSize',
-        value: '1',
+        value: props?.maxSize ?? '1',
     },
     {
         namespace: 'aws:ec2:instances',
         optionName: 'InstanceTypes',
-        value: 't2.micro',
+        value: props?.instanceTypes ?? 't2.micro',
     },
 ];
 
 
 // Create an Elastic Beanstalk environment to run the application
 const elbEnv = new elasticbeanstalk.CfnEnvironment(this, 'Environment', {
-    environmentName: 'MyWebAppEnvironment',
+    environmentName: props?.envName ?? "MyWebAppEnvironment",
     applicationName: app.applicationName || appName,
-    solutionStackName: '64bit Amazon Linux 2 v5.7.0 running Node.js 14',
+    solutionStackName: '64bit Amazon Linux 2 v5.8.0 running Node.js 18',
     optionSettings: optionSettingProperties,
     versionLabel: appVersionProps.ref,
 });
